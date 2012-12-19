@@ -1,0 +1,50 @@
+{
+    "2012-11-30": {
+        "bookings": [
+            {
+                "type": "sickness",
+                "hours": 7.5
+            }
+        ]
+    },
+    "2012-12-01": {
+        "bookings": [
+            {
+                "type": "holiday",
+                "hours": 2.5
+            },
+            {
+                "type": "sickness",
+                "hours": 2.5
+            }
+        ]
+    },
+    "2012-12-02": {
+        "bookings": [
+            {
+                "type": "project",
+                "hours": 0.5,
+                "details": {"code": "cs/123", "description": "A great project"}
+
+            },
+            {
+                "type": "project",
+                "hours": 1.5,
+                "details": {"code": "cs/124", "description": "Another great project"}
+
+            },
+            {
+                "type": "project",
+                "hours": 3.2,
+                "details": {"code": "cs/125", "description": "Yet another great project"}
+
+            },
+            {
+                "type": "project",
+                "hours": 1,
+                "details": {"code": "cs/126", "description": "Still more great project fun"}
+
+            }
+         ]
+    }
+}

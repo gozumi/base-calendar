@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Fisheye Distortion</title>
+<style>
+
+@import url(../style.css?20120620);
+
+#chart1 {
+	width: 960px;
+	height: 500px;
+	border: solid 1px #ccc;
+}
+
+text {
+	font: 10px sans-serif;
+}
+
+.background {
+	fill: none;
+	pointer-events: all;
+}
+
+#chart3 {
+	width: 960px;
+	height: 180px;
+	border: solid 1px #ccc;
+}
+
+#chart3 line {
+	fill: none;
+	stroke: #333;
+}
+
+#chart3 line {
+	shape-rendering: crispEdges;
+}
+
+.axis path, .axis line {
+	fill: none;
+	stroke: #fff;
+	shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<p id="chart3">
+
+
+<script src="http://d3js.org/d3.v2.min.js?2.9.4"></script>
+<script src="fisheye.js"></script>
+<script src="my-fisheye.js"></script>
+
