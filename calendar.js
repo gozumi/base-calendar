@@ -141,7 +141,7 @@ d3.select("div.forward").on("click", function() {
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
 	svg.selectAll('.day').data(dateRange.days, keyFunctionDay).exit().remove();
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit.remove();
+	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit().remove();
 });
 
 
@@ -172,7 +172,7 @@ d3.select("div.backward").on("click", function() {
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
 	svg.selectAll('.day').data(dateRange.days, keyFunctionDay).exit().remove();
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit.remove();
+	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit().remove();
 });
 
 function keyFunctionDay(d) {
