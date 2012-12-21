@@ -7,7 +7,8 @@ if(!Array.prototype.last) {
 
 //---------- CONSTANTS
 var ONE_DAY = 1000 * 60 * 60 * 24,
-	SHIFT_DAYS = 60;
+	SHIFT_DAYS = 30,
+	DURATION = 1000;
 
 
 //---------- Date formatters
@@ -77,15 +78,6 @@ var svg = d3.select("body").append("svg").attr('id', 'gozumi-calendar').attr("wi
 function dayPath(d) {
 	var startX = dateRange.weekNumber(d) * cellWidth;
 	var startY = day(d) * cellHeight;
-
-	// var x1 = xFisheye(startX  + 1);
-	// var x2 = xFisheye(startX + cellWidth  - 1);
-	// var x3 = xFisheye(startX + cellWidth  - 1);
-	// var x4 = xFisheye(startX + 1);
-	// var y1 = startY + 1;
-	// var y2 = startY + 1;
-	// var y3 = startY + cellHeight - 1;
-	// var y4 = startY + cellHeight - 1;
 
 	var x1 = xFisheye(startX) + 1;
 	var x2 = xFisheye(startX + cellWidth) - 1;
@@ -160,18 +152,17 @@ d3.select("div.forward").on("click", function() {
 	});
 
 	// Re-focus the date range
-	var focusDate = new Date(dateRange.focusDate.getTime() + (30 * ONE_DAY));
+	var focusDate = new Date(dateRange.focusDate.getTime() + (SHIFT_DAYS * ONE_DAY));
 	dateRange = _getDateRange(focusDate);
 
 	// Shift the DOM elements based on the re-focused range
-	svg.selectAll('path.dayRect').data(dateRange.days, keyFunctionDay).transition().duration(400).attr("d", dayPath);
-	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(400).attr('x', function(d){
+	svg.selectAll('path.dayRect').data(dateRange.days, keyFunctionDay).transition().duration(DURATION).attr("d", dayPath);
+	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(DURATION).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
 	});
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('x', function(d){
+	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(DURATION).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
-	// svg.selectAll('path.monthMarker').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('d', monthPath).attr('class', 'monthMarker');
 
 	// Remove DOM elements that are out of range
 	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).exit().remove();
@@ -221,18 +212,17 @@ d3.select("div.backward").on("click", function() {
 	});
 
 	// Re-focus the date range
-	var focusDate = new Date(dateRange.focusDate.getTime() - (30 * ONE_DAY));
+	var focusDate = new Date(dateRange.focusDate.getTime() - (SHIFT_DAYS * ONE_DAY));
 	dateRange = _getDateRange(focusDate);
 
 	// Shift the DOM elements based on the re-focused range
-	svg.selectAll(".dayRect").data(dateRange.days, keyFunctionDay).transition().duration(400).attr("d", dayPath);
-	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(400).attr('x', function(d){
+	svg.selectAll(".dayRect").data(dateRange.days, keyFunctionDay).transition().duration(DURATION).attr("d", dayPath);
+	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(DURATION).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
 	});
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('x', function(d){
+	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(DURATION).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
-	// svg.selectAll('path.monthMarker').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('d', monthPath).attr('class', 'monthMarker');
 
 	// Remove DOM elements that are out of range
 	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).exit().remove();
@@ -251,9 +241,9 @@ function keyFunctionMonth(d) {
 function _getDateRange(targetDate) {
 	var newTargetDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 14);
 	var fromDate = new Date(newTargetDate.getTime() - (ONE_DAY * SHIFT_DAYS));
-	fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+	//fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
 	var toDate = new Date(newTargetDate.getTime() + (ONE_DAY * SHIFT_DAYS));
-	toDate = new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0);
+	//toDate = new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0);
 	toDate = new Date(toDate.getTime() + ONE_DAY);
 
 	var days = d3.time.days(fromDate, toDate);
