@@ -6,7 +6,8 @@ if(!Array.prototype.last) {
 }
 
 //---------- CONSTANTS
-var ONE_DAY = 1000 * 60 * 60 * 24;
+var ONE_DAY = 1000 * 60 * 60 * 24,
+	SHIFT_DAYS = 60;
 
 
 //---------- Date formatters
@@ -19,10 +20,11 @@ var day = d3.time.format("%w"),
 	format = d3.time.format("%Y-%m-%d");
 
 //---------- Private Variables
-var _containerWidth = window.innerWidth;
-_containerHeight = 600;
-_calendarWidth = window.innerWidth, _calendarHeight = 400, dateRange = _getDateRange(new Date());
-
+var _containerWidth = window.innerWidth,
+	_containerHeight = 600,
+	_calendarWidth = window.innerWidth,
+	_calendarHeight = 400,
+	dateRange = _getDateRange(new Date());
 
 
 var cellWidth = Math.round(_calendarWidth / dateRange.weekCount),
@@ -39,8 +41,29 @@ var svg = d3.select("body").append("svg").attr('id', 'gozumi-calendar').attr("wi
 
 //------------ Initialisation funtion
 (function init() {
-	svg.selectAll(".day").data(dateRange.days, keyFunctionDay).enter().append('g').attr('class', 'day').append("path").attr("d", dayPath).attr("class", "dayRect").append("title").text(function(d) {
+	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).enter().append('g').attr('class', 'day').append("path").attr("d", dayPath).attr("class", function(d){
+		if ((d.getMonth() % 2)) {
+			return "dayRect odd";
+
+		} else {
+			return "dayRect even";
+		}
+	}).append("title").text(function(d) {
 		return format(d);
+	});
+	svg.selectAll("g.day").append('text').attr('class', function(d){
+		if ((d.getMonth() % 2)) {
+			return "date odd";
+
+		} else {
+			return "date even";
+		}
+	}).text(function(d){
+		return d.getDate();
+	}).attr('x', function(d){
+		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
+	}).attr('y', function(d){
+		return (day(d) * cellHeight) + 14;
 	});
 
 	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
@@ -55,45 +78,28 @@ function dayPath(d) {
 	var startX = dateRange.weekNumber(d) * cellWidth;
 	var startY = day(d) * cellHeight;
 
-	var x1 = xFisheye(startX  + 2);
-	var x2 = xFisheye(startX + cellWidth  - 2);
-	var x3 = xFisheye(startX + cellWidth  - 2);
-	var x4 = xFisheye(startX + 2);
-	var y1 = startY + 2;
-	var y2 = startY + 2;
-	var y3 = startY + cellHeight - 2;
-	var y4 = startY + cellHeight - 2;
+	// var x1 = xFisheye(startX  + 1);
+	// var x2 = xFisheye(startX + cellWidth  - 1);
+	// var x3 = xFisheye(startX + cellWidth  - 1);
+	// var x4 = xFisheye(startX + 1);
+	// var y1 = startY + 1;
+	// var y2 = startY + 1;
+	// var y3 = startY + cellHeight - 1;
+	// var y4 = startY + cellHeight - 1;
+
+	var x1 = xFisheye(startX) + 1;
+	var x2 = xFisheye(startX + cellWidth) - 1;
+	var x3 = xFisheye(startX + cellWidth) - 1;
+	var x4 = xFisheye(startX) + 1;
+	var y1 = startY + 1;
+	var y2 = startY + 1;
+	var y3 = startY + cellHeight - 1;
+	var y4 = startY + cellHeight - 1;
 
 	var pathString = 'M' + x1 + ' ' + y1 + ' ';
 	pathString = pathString + 'L' + x2 + ' ' + y2 + ' ';
 	pathString = pathString + 'L' + x3 + ' ' + y3 + ' ';
 	pathString = pathString + 'L' + x4 + ' ' + y4 + ' Z';
-
-	return pathString;
-}
-
-function monthPath(d) {
-	var x1 = dateRange.weekNumber(d) * cellWidth;
-	var y1 = (day(d) * cellHeight) + cellHeight;
-	var y2 = y1 - cellHeight;
-	var x2 = x1 + cellWidth;
-	var pathString;
-
-	if(d.getDate() <= 7) {
-		pathString = 'M' + xFisheye(x1) + ' ' + y1 + ' ' + 'L' + xFisheye(x1) + ' ' + y2;
-		if(d.getDate() === 1 && Number(day(d)) > 0) {
-			pathString = pathString + ' ' + 'L' + xFisheye(x2) + ' ' + y2;
-		}
-	} else {
-		pathString = 'M' + xFisheye(x1) + ' ' + y1 + ' ' + 'L' + xFisheye(x1) + ' ' + y1;
-		if(d.getDate() === 1 && Number(day(d)) > 0) {
-			pathString = pathString + ' ' + 'L' + xFisheye(x2) + ' ' + y1;
-		}
-	}
-
-	if(d.getDate() === 1 && Number(day(d)) > 0) {
-		pathString = pathString + ' ' + 'L' + xFisheye(x2) + ' ' + y2;
-	}
 
 	return pathString;
 }
@@ -121,26 +127,55 @@ d3.select("div.forward").on("click", function() {
 	var interimMonths = [].concat(dateRange.months, d3.time.months(firstOfNewDays, lastOfNewDays));
 
 	// Draw new days and months out of view so that they slide in nicely
-	svg.selectAll(".day").data(interimDays, keyFunctionDay).enter().append('g').attr('class', 'day').append("path").attr("d", dayPath).attr("class", "dayRect").append("title").text(function(d) {
+	var days = svg.selectAll('g.day').data(interimDays, keyFunctionDay).enter().append('g');
+	days.attr('class', 'day').append("path").attr("d", dayPath).attr("class", function(d){
+		if ((d.getMonth() % 2)) {
+			return "dayRect odd";
+
+		} else {
+			return "dayRect even";
+		}
+	}).append("title").text(function(d) {
 		return format(d);
 	});
+	days.append('text').attr('class', function(d){
+		if ((d.getMonth() % 2)) {
+			return "date odd";
+
+		} else {
+			return "date even";
+		}
+	}).text(function(d){
+		return d.getDate();
+	}).attr('x', function(d){
+		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
+	}).attr('y', function(d){
+		return (day(d) * cellHeight) + 14;
+	});
+
 	svg.selectAll('text.monthLabel').data(interimMonths, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
 		return monthText(d) + ' ' + d.getFullYear();
 	}).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
 
-
 	// Re-focus the date range
 	var focusDate = new Date(dateRange.focusDate.getTime() + (30 * ONE_DAY));
 	dateRange = _getDateRange(focusDate);
 
-	// Draw the newly calculated days
-	svg.selectAll(".dayRect").data(dateRange.days, keyFunctionDay).transition().duration(400).attr("d", dayPath).attr("class", "dayRect");
+	// Shift the DOM elements based on the re-focused range
+	svg.selectAll('path.dayRect').data(dateRange.days, keyFunctionDay).transition().duration(400).attr("d", dayPath);
+	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(400).attr('x', function(d){
+		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
+	});
 	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
-	svg.selectAll('.day').data(dateRange.days, keyFunctionDay).exit().remove();
+	// svg.selectAll('path.monthMarker').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('d', monthPath).attr('class', 'monthMarker');
+
+	// Remove DOM elements that are out of range
+	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).exit().remove();
+	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).exit().remove();
 	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit().remove();
 });
 
@@ -153,9 +188,32 @@ d3.select("div.backward").on("click", function() {
 	var interimMonths = [].concat(d3.time.months(firstOfNewDays, lastOfNewDays), dateRange.months);
 
 	// Draw new days and months out of view so that they slide in nicely
-	svg.selectAll(".day").data(interimDays, keyFunctionDay).enter().append('g').attr('class', 'day').append("path").attr("d", dayPath).attr("class", "dayRect").append("title").text(function(d) {
+	var days = svg.selectAll('g.day').data(interimDays, keyFunctionDay).enter().append('g');
+	days.attr('class', 'day').append("path").attr("d", dayPath).attr("class", function(d){
+		if ((d.getMonth() % 2)) {
+			return "dayRect odd";
+
+		} else {
+			return "dayRect even";
+		}
+	}).append("title").text(function(d) {
 		return format(d);
 	});
+	days.append('text').attr('class', function(d){
+		if ((d.getMonth() % 2)) {
+			return "date odd";
+
+		} else {
+			return "date even";
+		}
+	}).text(function(d){
+		return d.getDate();
+	}).attr('x', function(d){
+		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
+	}).attr('y', function(d){
+		return (day(d) * cellHeight) + 14;
+	});
+
 	svg.selectAll('text.monthLabel').data(interimMonths, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
 		return monthText(d) + ' ' + d.getFullYear();
 	}).attr('x', function(d){
@@ -166,12 +224,19 @@ d3.select("div.backward").on("click", function() {
 	var focusDate = new Date(dateRange.focusDate.getTime() - (30 * ONE_DAY));
 	dateRange = _getDateRange(focusDate);
 
-	// Draw the newly calculated days
-	svg.selectAll(".dayRect").data(dateRange.days, keyFunctionDay).transition().duration(400).attr("d", dayPath).attr("class", "dayRect");
+	// Shift the DOM elements based on the re-focused range
+	svg.selectAll(".dayRect").data(dateRange.days, keyFunctionDay).transition().duration(400).attr("d", dayPath);
+	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(400).attr('x', function(d){
+		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
+	});
 	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
-	svg.selectAll('.day').data(dateRange.days, keyFunctionDay).exit().remove();
+	// svg.selectAll('path.monthMarker').data(dateRange.months, keyFunctionMonth).transition().duration(400).attr('d', monthPath).attr('class', 'monthMarker');
+
+	// Remove DOM elements that are out of range
+	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).exit().remove();
+	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).exit().remove();
 	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit().remove();
 });
 
@@ -184,9 +249,10 @@ function keyFunctionMonth(d) {
 }
 
 function _getDateRange(targetDate) {
-	var fromDate = new Date(targetDate.getTime() - (ONE_DAY * 180));
+	var newTargetDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 14);
+	var fromDate = new Date(newTargetDate.getTime() - (ONE_DAY * SHIFT_DAYS));
 	fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
-	var toDate = new Date(targetDate.getTime() + (ONE_DAY * 180));
+	var toDate = new Date(newTargetDate.getTime() + (ONE_DAY * SHIFT_DAYS));
 	toDate = new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0);
 	toDate = new Date(toDate.getTime() + ONE_DAY);
 
