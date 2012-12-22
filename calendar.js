@@ -8,7 +8,7 @@ if(!Array.prototype.last) {
 //---------- CONSTANTS
 var ONE_DAY = 1000 * 60 * 60 * 24,
 	SHIFT_DAYS = 30,
-	DURATION = 1000;
+	DURATION = 500;
 
 
 //---------- Date formatters
@@ -115,11 +115,11 @@ function weekOffset(d) {
 d3.select("div.forward").on("click", function() {
 	var firstOfNewDays = new Date(dateRange.days.last().getTime() + ONE_DAY);
 	var lastOfNewDays = new Date(firstOfNewDays.getTime() + (ONE_DAY * 40));
-	var interimDays = [].concat(dateRange.days, d3.time.days(firstOfNewDays, lastOfNewDays));
-	var interimMonths = [].concat(dateRange.months, d3.time.months(firstOfNewDays, lastOfNewDays));
+	dateRange.days = [].concat(dateRange.days, d3.time.days(firstOfNewDays, lastOfNewDays));
+	dateRange.months = [].concat(dateRange.months, d3.time.months(firstOfNewDays, lastOfNewDays));
 
 	// Draw new days and months out of view so that they slide in nicely
-	var days = svg.selectAll('g.day').data(interimDays, keyFunctionDay).enter().append('g');
+	var days = svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).enter().append('g');
 	days.attr('class', 'day').append("path").attr("d", dayPath).attr("class", function(d){
 		if ((d.getMonth() % 2)) {
 			return "dayRect odd";
@@ -145,7 +145,7 @@ d3.select("div.forward").on("click", function() {
 		return (day(d) * cellHeight) + 14;
 	});
 
-	svg.selectAll('text.monthLabel').data(interimMonths, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
+	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
 		return monthText(d) + ' ' + d.getFullYear();
 	}).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
@@ -156,18 +156,17 @@ d3.select("div.forward").on("click", function() {
 	dateRange = _getDateRange(focusDate);
 
 	// Shift the DOM elements based on the re-focused range
-	svg.selectAll('path.dayRect').data(dateRange.days, keyFunctionDay).transition().duration(DURATION).attr("d", dayPath);
-	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).transition().duration(DURATION).attr('x', function(d){
+	svg.selectAll('path.dayRect').transition().duration(DURATION).attr("d", dayPath);
+	svg.selectAll('text.date').transition().duration(DURATION).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + 4);
 	});
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).transition().duration(DURATION).attr('x', function(d){
+	svg.selectAll('text.monthLabel').transition().duration(DURATION).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
 	});
 
 	// Remove DOM elements that are out of range
-	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).exit().remove();
-	svg.selectAll('text.date').data(dateRange.days, keyFunctionDay).exit().remove();
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit().remove();
+	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).exit().transition().duration(DURATION).remove();
+	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).exit().transition().duration(DURATION).remove();
 });
 
 
@@ -241,9 +240,9 @@ function keyFunctionMonth(d) {
 function _getDateRange(targetDate) {
 	var newTargetDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 14);
 	var fromDate = new Date(newTargetDate.getTime() - (ONE_DAY * SHIFT_DAYS));
-	//fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+	fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
 	var toDate = new Date(newTargetDate.getTime() + (ONE_DAY * SHIFT_DAYS));
-	//toDate = new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0);
+	toDate = new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0);
 	toDate = new Date(toDate.getTime() + ONE_DAY);
 
 	var days = d3.time.days(fromDate, toDate);
