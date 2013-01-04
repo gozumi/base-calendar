@@ -115,11 +115,11 @@ function dayTextClass(d) {
 d3.select("div.forward").on("click", function() {
 	var firstOfNewDays = new Date(dateRange.days.last().getTime() + ONE_DAY);
 	var lastOfNewDays = new Date(firstOfNewDays.getTime() + (ONE_DAY * SHIFT_DAYS));
-	dateRange.days = [].concat(dateRange.days, d3.time.days(firstOfNewDays, lastOfNewDays));
-	dateRange.months = [].concat(dateRange.months, d3.time.months(firstOfNewDays, lastOfNewDays));
+	var interimDays = [].concat(dateRange.days, d3.time.days(firstOfNewDays, lastOfNewDays));
+	var interimMonths = [].concat(dateRange.months, d3.time.months(firstOfNewDays, lastOfNewDays));
 
 	// Draw new days and months out of view so that they slide in nicely
-	var days = svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).enter().append('g');
+	var days = svg.selectAll('g.day').data(interimDays, keyFunctionDay).enter().append('g');
 	days.attr('class', 'day').append("path").attr("d", dayPath).attr("class", dayRectClass).append("title").text(function(d) {
 		return format(d);
 	});
@@ -131,7 +131,7 @@ d3.select("div.forward").on("click", function() {
 		return (day(d) * cellHeight) + 14;
 	});
 
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
+	svg.selectAll('text.monthLabel').data(interimMonths, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
 		return monthText(d) + ' ' + d.getFullYear();
 	}).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
@@ -176,7 +176,7 @@ d3.select("div.backward").on("click", function() {
 		return (day(d) * cellHeight) + 14;
 	});
 
-	svg.selectAll('text.monthLabel').data(dateRange.months, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
+	svg.selectAll('text.monthLabel').data(interimMonths, keyFunctionMonth).enter().append('text').attr('class', 'monthLabel').attr('y', -10).text(function(d){
 		return monthText(d) + ' ' + d.getFullYear();
 	}).attr('x', function(d){
 		return xFisheye((dateRange.weekNumber(d) * cellWidth) + cellWidth + (cellWidth/2));
