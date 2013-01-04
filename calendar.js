@@ -8,8 +8,9 @@ if(!Array.prototype.last) {
 //---------- CONSTANTS
 var ONE_DAY = 1000 * 60 * 60 * 24,
 	SHIFT_DAYS = 30,
-	DURATION = 500;
-
+	DURATION = 500,
+	WEEKS_TO_DISPLAY = 14;
+	TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
 //---------- Date formatters
 var day = d3.time.format("%w"),
@@ -28,7 +29,7 @@ var _containerWidth = window.innerWidth,
 	dateRange = _getDateRange(new Date());
 
 
-var cellWidth = Math.round(_calendarWidth / dateRange.weekCount),
+var cellWidth = Math.round(_calendarWidth / WEEKS_TO_DISPLAY),
 	cellHeight = Math.round(_calendarHeight / 7);
 
 var xFisheye = d3.fisheye.scale(d3.scale.identity).domain([0, _calendarWidth]).focus(_calendarWidth / 2);
@@ -43,22 +44,32 @@ var svg = d3.select("body").append("svg").attr('id', 'gozumi-calendar').attr("wi
 //------------ Initialisation funtion
 (function init() {
 	svg.selectAll('g.day').data(dateRange.days, keyFunctionDay).enter().append('g').attr('class', 'day').append("path").attr("d", dayPath).attr("class", function(d){
+		var classString;
 		if ((d.getMonth() % 2)) {
-			return "dayRect odd";
+			classString = "dayRect odd";
 
 		} else {
-			return "dayRect even";
+			classString = "dayRect even";
 		}
+		if (d.getTime() == TODAY.getTime()) {
+			classString = 'dayRect today';
+		}
+		return classString;
 	}).append("title").text(function(d) {
 		return format(d);
 	});
 	svg.selectAll("g.day").append('text').attr('class', function(d){
+		var classString;
 		if ((d.getMonth() % 2)) {
-			return "date odd";
+			classString = "date odd";
 
 		} else {
-			return "date even";
+			classString = "date even";
 		}
+		if (d.getTime() == TODAY.getTime()) {
+			classString = 'date today';
+		}
+		return classString;
 	}).text(function(d){
 		return d.getDate();
 	}).attr('x', function(d){
@@ -94,20 +105,6 @@ function dayPath(d) {
 	pathString = pathString + 'L' + x4 + ' ' + y4 + ' Z';
 
 	return pathString;
-}
-
-function weekOffset(d) {
-	var dateRange = getDateRange(focusDate);
-	var years = d3.range(dateRange.days[0].getFullYear(), Number(year(d)));
-	var accumuletedWeekNumber = 0;
-
-	for(var i = 0; i < years.length; i++) {
-		if(day(new Date(years[i] + 1, 0, 1)) == "0") {
-			accumuletedWeekNumber = accumuletedWeekNumber + 1;
-		}
-		accumuletedWeekNumber = accumuletedWeekNumber + Number(week(new Date(years[i], 11, 31)));
-	}
-	return accumuletedWeekNumber * cellWidth;
 }
 
 
@@ -238,28 +235,31 @@ function keyFunctionMonth(d) {
 }
 
 function _getDateRange(targetDate) {
-	var newTargetDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 14);
-	var fromDate = new Date(newTargetDate.getTime() - (ONE_DAY * SHIFT_DAYS));
-	fromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
-	var toDate = new Date(newTargetDate.getTime() + (ONE_DAY * SHIFT_DAYS));
-	toDate = new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0);
-	toDate = new Date(toDate.getTime() + ONE_DAY);
+	var plusDays = Math.floor(WEEKS_TO_DISPLAY / 2) * 7;
+	var minusDays;
+
+	if ((WEEKS_TO_DISPLAY % 2) === 0) {
+		minusDays  = (Math.floor(WEEKS_TO_DISPLAY / 2) - 1) * 7;
+	} else {
+		minusDays  = Math.floor(WEEKS_TO_DISPLAY / 2) * 7;
+	}
+
+	var fromDate = new Date(targetDate.getTime() - (ONE_DAY * minusDays));
+	var fromDayOfWeek = day(fromDate);
+	fromDate = new Date(fromDate.getTime() - (ONE_DAY * fromDayOfWeek) - ONE_DAY);
+
+	var toDate = new Date(targetDate.getTime() + (ONE_DAY * plusDays));
+	var toDayOfWeek = day(toDate);
+	var endOfWeekDays = 6 - toDayOfWeek;
+	toDate = new Date(toDate.getTime() + (ONE_DAY * endOfWeekDays));
 
 	var days = d3.time.days(fromDate, toDate);
 	var months = d3.time.months(fromDate, toDate);
-	var weekCount = Math.floor(days.length / 7);
-	if((days.length % 7) > 0) {
-		weekCount++;
-	}
-	if(day(days.last()) < day(days[0])) {
-		weekCount++;
-	}
 
 	var rangeObject = {
 		focusDate: targetDate,
 		days: days,
 		months: months,
-		weekCount: weekCount,
 		weekNumber: function(date) {
 			var justTheDatePart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 			var dayNumber = 0;
