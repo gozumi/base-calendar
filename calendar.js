@@ -252,9 +252,6 @@ function _getDateRange(targetDate) {
 			} else {
 				dayNumber = d3.time.days(date, this.days[0]).length * -1;
 				weekNumber = Math.floor(dayNumber / 7);
-				// if(day(days[0]) < day(date)) {
-				// 	weekNumber++;
-				// }
 			}
 			return weekNumber;
 		}
@@ -262,3 +259,19 @@ function _getDateRange(targetDate) {
 
 	return rangeObject;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
